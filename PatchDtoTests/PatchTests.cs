@@ -156,6 +156,8 @@ namespace PatchDtoTests
 
             var propertyErrors = errors["MaxLength5"];
 
+            Assert.True(patch.HasErrors);
+
             Assert.AreEqual(propertyErrors.Count, 2);
 
             StringAssert.Contains("maximum length of '5'", propertyErrors[0]);
