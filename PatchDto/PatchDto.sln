@@ -3,9 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.30225.117
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PatchDto", "PatchDto.csproj", "{6F27DDBF-DEC0-4290-BE4E-24383CCF802F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Patch.Net", "Patch.Net.csproj", "{6F27DDBF-DEC0-4290-BE4E-24383CCF802F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PatchDtoTests", "..\PatchDtoTests\PatchDtoTests.csproj", "{A4A2E054-1040-4798-A1A2-FEF6699E0568}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Patch.NetTests", "..\PatchDtoTests\Patch.NetTests.csproj", "{A4A2E054-1040-4798-A1A2-FEF6699E0568}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

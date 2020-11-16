@@ -1,7 +1,7 @@
 using System;
 using System.ComponentModel.DataAnnotations;
 using NUnit.Framework;
-using PatchDto;
+using Patch.Net;
 
 namespace PatchDtoTests
 {

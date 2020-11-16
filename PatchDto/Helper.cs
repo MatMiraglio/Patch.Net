@@ -2,7 +2,7 @@
 using System.Linq.Expressions;
 using System.Reflection;
 
-namespace PatchDto
+namespace Patch.Net
 {
     public class Helper
     {

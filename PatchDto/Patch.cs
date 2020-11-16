@@ -5,22 +5,19 @@ using System.Linq.Expressions;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
-namespace PatchDto
+namespace Patch.Net
 {
     public class Patch<TSource>
     {
         private readonly JObject _json;
         private readonly TSource _object;
         private readonly Dictionary<string, List<string>> _errors;
-        private ValidationContext _validationContext;
 
         public Patch(string json)
         {
             _json = JObject.Parse(json);
             _object = JsonConvert.DeserializeObject<TSource>(json);
             _errors = new Dictionary<string, List<string>>();
-            _validationContext = new ValidationContext(_object);
-
         }
 
         public Dictionary<string, List<string>> GetErrors()
@@ -43,7 +40,7 @@ namespace PatchDto
 
                 if (!HasPatchFor(propertyName)) continue;
 
-                var value = Helper.GetValue<TSource>(propertyName, from: _object);
+                var value = Helper.GetValue<TSource>(propertyName, @from: _object);
 
                 var validationResults = new List<ValidationResult>();
                 var vc = new ValidationContext(_object){MemberName = propertyName};
@@ -73,7 +70,7 @@ namespace PatchDto
 
         private void PatchValue(object target, string propertyName)
         {
-            var value = Helper.GetValue<TSource>(propertyName, from: _object);
+            var value = Helper.GetValue<TSource>(propertyName, @from: _object);
 
             Helper.Assign(value, propertyName, to: target);
         }
@@ -94,7 +91,7 @@ namespace PatchDto
                 return false;
             }
 
-            value = Helper.GetValue<TSource>(propertyName, from: _object);
+            value = Helper.GetValue<TSource>(propertyName, @from: _object);
 
             return true;
         }

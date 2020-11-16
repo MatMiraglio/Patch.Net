@@ -1,7 +1,7 @@
 ﻿using NUnit.Framework;
-using PatchDto;
+using Patch.Net;
 
-namespace PatchDtoTests
+namespace Patch.NetTests
 {
     [TestFixture]
     public class HelperTests
