@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations;
 using NUnit.Framework;
 using Patch.Net;
 
-namespace PatchDtoTests
+namespace Patch.NetTests
 {
     [TestFixture]
     public class PatchTests
@@ -18,11 +18,11 @@ namespace PatchDtoTests
         {
            
             const string json = @"
-                {
-                    'StringProperty' : 'json_value',
-                    'IntProperty' : 5,
-                    'DateTimeProperty' : '2020-01-12'
-                }";
+            {
+                'StringProperty' : 'json_value',
+                'IntProperty' : 5,
+                'DateTimeProperty' : '2020-01-12'
+            }";
 
             var patch = new Patch<SourceClass>(json);
 
@@ -132,6 +132,34 @@ namespace PatchDtoTests
             Assert.AreEqual(targetObject.IntProperty, 1);
         }
 
+
+        [Test]
+        public void Patch_is_case_insensitive()
+        {
+
+            const string json = @"
+                {
+                    'stringProperty' : 'json_value',
+                    'intProperty' : 10
+                }";
+
+            var patch = new Patch<SourceClass>(json);
+
+            var targetObject = new TargetClass
+            {
+                StringProperty = "original_value",
+                IntProperty = 1
+            };
+
+            patch.AutoPatch(targetObject,
+                x => x.StringProperty,
+                x => x.IntProperty
+            );
+
+            Assert.AreEqual(targetObject.StringProperty, "json_value");
+            Assert.AreEqual(targetObject.IntProperty, 10);
+        }
+
         [Test]
         public void Validation_failures_are_added_to_the()
         {
@@ -155,6 +183,38 @@ namespace PatchDtoTests
             var errors = patch.GetErrors();
 
             var propertyErrors = errors["MaxLength5"];
+
+            Assert.True(patch.HasErrors);
+
+            Assert.AreEqual(propertyErrors.Count, 2);
+
+            StringAssert.Contains("maximum length of '5'", propertyErrors[0]);
+            StringAssert.Contains("[a-z]", propertyErrors[1]);
+        }
+
+        [Test]
+        public void Errors_are_returned_with_same_casing_as_in_the_original_json()
+        {
+
+            const string json = @"
+                {
+                    'maxLength5' : '123456'
+                }";
+
+            var patch = new Patch<SourceClass>(json);
+
+            var targetObject = new TargetClass
+            {
+                MaxLength5 = "original",
+            };
+
+            patch.AutoPatch(targetObject,
+                x => x.MaxLength5
+            );
+
+            var errors = patch.GetErrors();
+
+            var propertyErrors = errors["maxLength5"];
 
             Assert.True(patch.HasErrors);
 

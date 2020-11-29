@@ -40,7 +40,8 @@ namespace Patch.Net
 
                 if (!HasPatchFor(propertyName)) continue;
 
-                var value = Helper.GetValue<TSource>(propertyName, @from: _object);
+
+                var value = Helper.GetValue<TSource>(propertyName, from: _object);
 
                 var validationResults = new List<ValidationResult>();
                 var vc = new ValidationContext(_object){MemberName = propertyName};
@@ -53,19 +54,37 @@ namespace Patch.Net
                 }
                 else
                 {
+                    var originalJsonName = GetOriginalJsonName(propertyName);
+
+
                     foreach (var validationResult in validationResults)
                     {
-                        if (_errors.TryGetValue(propertyName, out var propertyErrors))
+
+
+                        if (_errors.TryGetValue(originalJsonName, out var propertyErrors))
                         {
                             propertyErrors.Add(validationResult.ErrorMessage);
                         }
                         else
                         {
-                            _errors.Add(propertyName, new List<string> { validationResult.ErrorMessage });
+                            _errors.Add(originalJsonName, new List<string> { validationResult.ErrorMessage });
                         }
                     }
                 }
             }
+        }
+
+        private string GetOriginalJsonName(string propertyName)
+        {
+            foreach (var property in _json.Properties())
+            {
+                if (property.Name.Equals(propertyName, StringComparison.InvariantCultureIgnoreCase))
+                {
+                    return property.Name;
+                }
+            }
+
+            throw new InvalidOperationException($"Key {propertyName} is not present in Json");
         }
 
         private void PatchValue(object target, string propertyName)
@@ -77,7 +96,7 @@ namespace Patch.Net
 
         public bool HasPatchFor(string propertyName)
         {
-            return _json[propertyName] != null;
+            return _json.GetValue(propertyName, StringComparison.InvariantCultureIgnoreCase) != null;
         }
 
         public bool HasPatchFor(Expression<Func<TSource, object>> expression, out object value)
