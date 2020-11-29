@@ -1,12 +1,30 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 namespace Patch.Net
 {
+
+
+    public class PatchJsonConverter<T> : JsonConverter<Patch<T>>
+    {
+        public override Patch<T> ReadJson(JsonReader reader, Type objectType, [AllowNull] Patch<T> existingValue, bool hasExistingValue, JsonSerializer serializer)
+        {
+            return new Patch<T>(reader.ToString());
+        }
+
+        public override void WriteJson(JsonWriter writer, [AllowNull] Patch<T> value, JsonSerializer serializer)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
+
+
     public class Patch<TSource>
     {
         private readonly JObject _json;
