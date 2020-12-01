@@ -132,16 +132,51 @@ namespace Patch.NetTests
             Assert.AreEqual(targetObject.IntProperty, 1);
         }
 
+        [Test]
+        public void HasPatchFor_returns_true_if_the_key_was_present_in_the_json_and_outputs_the_value_to_use_in_patch()
+        {
+
+            const string json = @"
+                {
+                    'intProperty' : 15,
+                    'stringProperty' : 'json_value'
+                }";
+
+            var patch = new Patch<SourceClass>(json);
+
+
+            if (patch.HasPatchFor(x => x.StringProperty, out var value))
+                Assert.AreEqual("json_value", value);
+            else
+                Assert.Fail();
+
+            if (patch.HasPatchFor(x => x.IntProperty, out var intVal))
+                Assert.AreEqual(15, intVal);
+            else
+                Assert.Fail();
+
+        }
+
+        [Test]
+        public void HasPatchFor_returns_false_if_the_key_was_not_present_in_the_json()
+        {
+            var patch = new Patch<SourceClass>("{}");
+
+            if (patch.HasPatchFor(x => x.StringProperty, out var value))
+                Assert.Fail();
+        }
+
+
 
         [Test]
         public void Patch_is_case_insensitive()
         {
 
             const string json = @"
-                {
-                    'stringProperty' : 'json_value',
-                    'intProperty' : 10
-                }";
+            {
+                'stringproperty' : 'json_value',
+                'INTPROPERTY' : 10
+            }";
 
             var patch = new Patch<SourceClass>(json);
 
@@ -165,9 +200,9 @@ namespace Patch.NetTests
         {
 
             const string json = @"
-                {
-                    'MaxLength5' : '123456'
-                }";
+            {
+                'MaxLength5' : '123456'
+            }";
 
             var patch = new Patch<SourceClass>(json);
 

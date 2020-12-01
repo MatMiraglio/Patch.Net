@@ -2,7 +2,9 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -36,6 +38,47 @@ namespace Patch.Net
             _json = JObject.Parse(json);
             _object = JsonConvert.DeserializeObject<TSource>(json);
             _errors = new Dictionary<string, List<string>>();
+
+            ValidatePatch();
+        }
+
+        private void ValidatePatch()
+        {
+            foreach (var key in _json.Properties())
+            {
+                var propertyName = key.Name;
+
+                var classPropertyName = GetClassPropertyName(propertyName);
+
+                var value = Helper.GetValue<TSource>(classPropertyName, from: _object);
+
+                var validationResults = new List<ValidationResult>();
+
+                var vc = new ValidationContext(_object) { MemberName = classPropertyName };
+
+                bool isValid = Validator.TryValidateProperty(value, vc, validationResults);
+
+                if (!isValid)
+                {
+                    foreach (var validationResult in validationResults)
+                    {
+                        if (_errors.TryGetValue(propertyName, out var propertyErrors))
+                        {
+                            propertyErrors.Add(validationResult.ErrorMessage);
+                        }
+                        else
+                        {
+                            _errors.Add(propertyName, new List<string> { validationResult.ErrorMessage });
+                        }
+                    }
+                }
+            }
+        }
+
+        private string GetClassPropertyName(string propertyName)
+        {
+            Type t = typeof(TSource);
+            return t.GetProperty(propertyName, BindingFlags.IgnoreCase | BindingFlags.Public | BindingFlags.Instance).Name;
         }
 
         public Dictionary<string, List<string>> GetErrors()
@@ -56,40 +99,16 @@ namespace Patch.Net
             {
                 var propertyName = Helper.GetPropertyName(propertySelector);
 
-                if (!HasPatchFor(propertyName)) continue;
-
-
-                var value = Helper.GetValue<TSource>(propertyName, from: _object);
-
-                var validationResults = new List<ValidationResult>();
-                var vc = new ValidationContext(_object){MemberName = propertyName};
-
-                bool isValid = Validator.TryValidateProperty(value, vc, validationResults);
-
-                if (isValid)
+                if (KeyIsPresentInJson(propertyName) && JsonValueIsValid(propertyName))
                 {
                     PatchValue(target, propertyName);
                 }
-                else
-                {
-                    var originalJsonName = GetOriginalJsonName(propertyName);
-
-
-                    foreach (var validationResult in validationResults)
-                    {
-
-
-                        if (_errors.TryGetValue(originalJsonName, out var propertyErrors))
-                        {
-                            propertyErrors.Add(validationResult.ErrorMessage);
-                        }
-                        else
-                        {
-                            _errors.Add(originalJsonName, new List<string> { validationResult.ErrorMessage });
-                        }
-                    }
-                }
             }
+        }
+
+        private bool JsonValueIsValid(string propertyName)
+        {
+            return !_errors.ContainsKey(propertyName);
         }
 
         private string GetOriginalJsonName(string propertyName)
@@ -102,7 +121,7 @@ namespace Patch.Net
                 }
             }
 
-            throw new InvalidOperationException($"Key {propertyName} is not present in Json");
+            return null;
         }
 
         private void PatchValue(object target, string propertyName)
@@ -112,7 +131,7 @@ namespace Patch.Net
             Helper.Assign(value, propertyName, to: target);
         }
 
-        public bool HasPatchFor(string propertyName)
+        private bool KeyIsPresentInJson(string propertyName)
         {
             return _json.GetValue(propertyName, StringComparison.InvariantCultureIgnoreCase) != null;
         }
@@ -120,7 +139,16 @@ namespace Patch.Net
         public bool HasPatchFor(Expression<Func<TSource, object>> expression, out object value)
         {
             var propertyName = Helper.GetPropertyName(expression);
-            var jsonValue = _json[propertyName];
+
+            var originalJsonName = GetOriginalJsonName(propertyName);
+
+            if (originalJsonName == null)
+            {
+                value = default;
+                return false;
+            }
+
+            var jsonValue = _json[originalJsonName];
 
             if (jsonValue == null)
             {
@@ -128,7 +156,7 @@ namespace Patch.Net
                 return false;
             }
 
-            value = Helper.GetValue<TSource>(propertyName, @from: _object);
+            value = Helper.GetValue<TSource>(propertyName, from: _object);
 
             return true;
         }
