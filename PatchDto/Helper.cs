@@ -24,7 +24,7 @@ namespace Patch.Net
             return ((PropertyInfo)memberExpression.Member).Name;
         }
 
-        public static object GetValue<T>(string propertyName, object from)
+        public static object GetValue<T>(string propertyName, T from)
         {
             return typeof(T)
                 .GetProperty(propertyName)?

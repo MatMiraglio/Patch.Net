@@ -11,7 +11,6 @@ using Newtonsoft.Json.Linq;
 namespace Patch.Net
 {
 
-
     public class PatchJsonConverter<T> : JsonConverter<Patch<T>>
     {
         public override Patch<T> ReadJson(JsonReader reader, Type objectType, [AllowNull] Patch<T> existingValue, bool hasExistingValue, JsonSerializer serializer)
@@ -48,7 +47,7 @@ namespace Patch.Net
             {
                 var classPropertyName = GetClassPropertyName(key.Name);
 
-                var value = Helper.GetValue<TSource>(classPropertyName, from: _object);
+                var value = Helper.GetValue(classPropertyName, from: _object);
 
                 var validationResults = GetValidationErrors(classPropertyName, value);
 
@@ -114,22 +113,9 @@ namespace Patch.Net
             return !_errors.ContainsKey(propertyName);
         }
 
-        private string GetOriginalJsonName(string propertyName)
-        {
-            foreach (var property in _json.Properties())
-            {
-                if (property.Name.Equals(propertyName, StringComparison.InvariantCultureIgnoreCase))
-                {
-                    return property.Name;
-                }
-            }
-
-            return null;
-        }
-
         private void PatchValue(object target, string propertyName)
         {
-            var value = Helper.GetValue<TSource>(propertyName, @from: _object);
+            var value = Helper.GetValue(propertyName, @from: _object);
 
             Helper.Assign(value, propertyName, to: target);
         }
@@ -143,25 +129,14 @@ namespace Patch.Net
         {
             var propertyName = Helper.GetPropertyName(expression);
 
-            var originalJsonName = GetOriginalJsonName(propertyName);
-
-            if (originalJsonName == null)
+            if (KeyIsPresentInJson(propertyName))
             {
-                value = default;
-                return false;
+                value = Helper.GetValue(propertyName, from: _object);
+                return true;
             }
 
-            var jsonValue = _json[originalJsonName];
-
-            if (jsonValue == null)
-            {
-                value = default;
-                return false;
-            }
-
-            value = Helper.GetValue<TSource>(propertyName, from: _object);
-
-            return true;
+            value = default;
+            return false;
         }
     }
 }
