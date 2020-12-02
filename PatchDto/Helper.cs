@@ -34,8 +34,8 @@ namespace Patch.Net
         public static void Assign(object value, string propertyName, object to)
         {
             to.GetType()
-                .GetProperty(propertyName)?
-                .SetValue(to, value, null);
+              .GetProperty(propertyName)?
+              .SetValue(to, value, null);
         }
     }
 }

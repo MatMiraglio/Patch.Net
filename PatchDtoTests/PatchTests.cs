@@ -198,7 +198,6 @@ namespace Patch.NetTests
         [Test]
         public void Validation_failures_are_added_to_the()
         {
-
             const string json = @"
             {
                 'MaxLength5' : '123456'
@@ -215,7 +214,7 @@ namespace Patch.NetTests
                 x => x.MaxLength5
             );
 
-            var errors = patch.GetErrors();
+            var errors = patch.ValidationErrors;
 
             var propertyErrors = errors["MaxLength5"];
 
@@ -247,7 +246,7 @@ namespace Patch.NetTests
                 x => x.MaxLength5
             );
 
-            var errors = patch.GetErrors();
+            var errors = patch.ValidationErrors;
 
             var propertyErrors = errors["maxLength5"];
 

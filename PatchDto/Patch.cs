@@ -46,46 +46,49 @@ namespace Patch.Net
         {
             foreach (var key in _json.Properties())
             {
-                var propertyName = key.Name;
-
-                var classPropertyName = GetClassPropertyName(propertyName);
+                var classPropertyName = GetClassPropertyName(key.Name);
 
                 var value = Helper.GetValue<TSource>(classPropertyName, from: _object);
 
-                var validationResults = new List<ValidationResult>();
+                var validationResults = GetValidationErrors(classPropertyName, value);
 
-                var vc = new ValidationContext(_object) { MemberName = classPropertyName };
+                AddErrors(key.Name, validationResults);
+            }
+        }
 
-                bool isValid = Validator.TryValidateProperty(value, vc, validationResults);
+        private List<ValidationResult> GetValidationErrors(string classPropertyName, object value)
+        {
+            var validationResults = new List<ValidationResult>();
 
-                if (!isValid)
+            Validator.TryValidateProperty(value, new ValidationContext(_object) { MemberName = classPropertyName }, validationResults);
+
+            return validationResults;
+        }
+
+        private void AddErrors(string jsonKey, List<ValidationResult> validationResults)
+        {
+            foreach (var validationResult in validationResults)
+            {
+                if (_errors.TryGetValue(jsonKey, out var propertyErrors))
                 {
-                    foreach (var validationResult in validationResults)
-                    {
-                        if (_errors.TryGetValue(propertyName, out var propertyErrors))
-                        {
-                            propertyErrors.Add(validationResult.ErrorMessage);
-                        }
-                        else
-                        {
-                            _errors.Add(propertyName, new List<string> { validationResult.ErrorMessage });
-                        }
-                    }
+                    propertyErrors.Add(validationResult.ErrorMessage);
+                }
+                else
+                {
+                    _errors.Add(jsonKey, new List<string> { validationResult.ErrorMessage });
                 }
             }
         }
 
         private string GetClassPropertyName(string propertyName)
         {
-            Type t = typeof(TSource);
-            return t.GetProperty(propertyName, BindingFlags.IgnoreCase | BindingFlags.Public | BindingFlags.Instance).Name;
+            return typeof(TSource)
+                .GetProperty(propertyName, BindingFlags.IgnoreCase | BindingFlags.Public | BindingFlags.Instance)
+                .Name;
         }
 
-        public Dictionary<string, List<string>> GetErrors()
-        {
-            return _errors;
-        }
-
+        public IReadOnlyDictionary<string, List<string>> ValidationErrors => _errors;
+        
         public bool HasErrors => _errors.Count > 0;
 
         /// <summary>
