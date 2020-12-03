@@ -124,13 +124,13 @@ namespace Patch.Net
             return _json.GetValue(propertyName, StringComparison.InvariantCultureIgnoreCase) != null;
         }
 
-        public bool HasPatchFor(Expression<Func<TSource, object>> expression, out object value)
+        public bool HasKey<T>(Expression<Func<TSource, object>> expression, out T value)
         {
             var propertyName = Reflection.GetPropertyName(expression);
 
             if (KeyIsPresentInJson(propertyName))
             {
-                value = Reflection.GetValue(propertyName, from: _object);
+                value = (T) Reflection.GetValue(propertyName, from: _object);
                 return true;
             }
 

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using NUnit.Framework;
 using Patch.Net;
@@ -145,12 +146,12 @@ namespace Patch.NetTests
             var patch = new Patch<SourceClass>(json);
 
 
-            if (patch.HasPatchFor(x => x.StringProperty, out var value))
+            if (patch.HasKey(x => x.StringProperty, out string value))
                 Assert.AreEqual("json_value", value);
             else
                 Assert.Fail();
 
-            if (patch.HasPatchFor(x => x.IntProperty, out var intVal))
+            if (patch.HasKey(x => x.IntProperty, out int intVal))
                 Assert.AreEqual(15, intVal);
             else
                 Assert.Fail();
@@ -162,7 +163,7 @@ namespace Patch.NetTests
         {
             var patch = new Patch<SourceClass>("{}");
 
-            if (patch.HasPatchFor(x => x.StringProperty, out var value))
+            if (patch.HasKey(x => x.StringProperty, out string value))
                 Assert.Fail();
         }
 
@@ -257,6 +258,51 @@ namespace Patch.NetTests
             StringAssert.Contains("maximum length of '5'", propertyErrors[0]);
             StringAssert.Contains("[a-z]", propertyErrors[1]);
         }
+
+        [Test]
+        public void AutoPatch_works_with_null()
+        {
+
+            const string json = @"
+            {
+                'stringProperty' : null
+            }";
+
+            var patch = new Patch<SourceClass>(json);
+
+            var targetObject = new TargetClass
+            {
+                StringProperty = "original",
+            };
+
+            patch.AutoPatch(targetObject,
+                x => x.StringProperty
+            );
+
+            Assert.IsNull(targetObject.StringProperty);
+        }
+
+        [Test]
+        public void Patch_with_list()
+        {
+
+            const string json = @"
+            {
+                'guidList' : [
+                    '00000000-0000-0000-0000-000000000022',
+                    '00000000-0000-0000-0000-000000000033'
+                ]
+            }";
+
+            var patch = new Patch<SourceClass>(json);
+
+            if (patch.HasKey(x => x.GuidList, out List<Guid> list))
+            {
+                Assert.AreEqual(new Guid("00000000-0000-0000-0000-000000000022"), list[0]);
+                Assert.AreEqual(new Guid("00000000-0000-0000-0000-000000000033"), list[1]);
+            }
+            else Assert.Fail();
+        }
     }
 
 
@@ -273,7 +319,7 @@ namespace Patch.NetTests
 
         public DateTime DateTimeProperty { get; set; }
 
-        public Guid GuidProperty { get; set; }
+        public List<Guid> GuidList { get; set; }
     }
 
     public class TargetClass
@@ -282,6 +328,6 @@ namespace Patch.NetTests
         public int IntProperty { get; set; }
         public DateTime DateTimeProperty { get; set; }
         public string MaxLength5 { get; set; }
-        public Guid GuidProperty { get; set; }
+        public List<Guid> GuidProperty { get; set; }
     }
 }
