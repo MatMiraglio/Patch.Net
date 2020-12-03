@@ -6,23 +6,6 @@ namespace Patch.Net
 {
     public static class Reflection
     {
-        public static string GetPropertyName<TSource>(Expression<Func<TSource, object>> propertyLambda)
-        {
-            LambdaExpression lambda = propertyLambda;
-            MemberExpression memberExpression;
-
-            if (lambda.Body is UnaryExpression expression)
-            {
-                var unaryExpression = expression;
-                memberExpression = (MemberExpression)(unaryExpression.Operand);
-            }
-            else
-            {
-                memberExpression = (MemberExpression)(lambda.Body);
-            }
-
-            return ((PropertyInfo)memberExpression.Member).Name;
-        }
 
         public static object GetValue<T>(string propertyName, T from)
         {

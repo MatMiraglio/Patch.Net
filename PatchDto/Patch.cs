@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 using System.Reflection;
 using Newtonsoft.Json;
@@ -10,26 +9,16 @@ using Newtonsoft.Json.Linq;
 namespace Patch.Net
 {
 
-    public class PatchJsonConverter<T> : JsonConverter<Patch<T>>
-    {
-        public override Patch<T> ReadJson(JsonReader reader, Type objectType, [AllowNull] Patch<T> existingValue, bool hasExistingValue, JsonSerializer serializer)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override void WriteJson(JsonWriter writer, [AllowNull] Patch<T> value, JsonSerializer serializer)
-        {
-            throw new NotImplementedException();
-        }
-    }
-
-
     [JsonConverter(typeof(PatchJsonConverter<>))]
     public class Patch<TSource>
     {
         private readonly JObject _json;
         private readonly TSource _object;
         private readonly Dictionary<string, List<string>> _errors;
+
+        public IReadOnlyDictionary<string, List<string>> ValidationErrors => _errors;
+
+        public bool HasErrors => _errors.Count > 0;
 
         public Patch(string json)
         {
@@ -38,6 +27,38 @@ namespace Patch.Net
             _errors = new Dictionary<string, List<string>>();
 
             ValidatePatch();
+        }
+
+        /// <summary>
+        /// Used to patch the properties in the target object when the name in the Dto matches and all the validation can be done via attributes.
+        /// </summary>
+        /// <param name="target"></param>
+        /// <param name="propertiesToPatch">properties to auto patch</param>
+        public void AutoPatch(object target, params Expression<Func<TSource, object>>[] propertiesToPatch)
+        {
+            foreach (var propertySelector in propertiesToPatch)
+            {
+                var propertyName = GetPropertyName(propertySelector);
+
+                if (KeyIsPresentInJson(propertyName) && JsonValueIsValid(propertyName))
+                {
+                    PatchValue(target, propertyName);
+                }
+            }
+        }
+
+        public bool HasKey<T>(Expression<Func<TSource, T>> expression, out T value)
+        {
+            var propertyName = GetPropertyName(expression);
+
+            if (KeyIsPresentInJson(propertyName))
+            {
+                value = (T)Reflection.GetValue(propertyName, from: _object);
+                return true;
+            }
+
+            value = default;
+            return false;
         }
 
         private void ValidatePatch()
@@ -85,27 +106,6 @@ namespace Patch.Net
                 .Name;
         }
 
-        public IReadOnlyDictionary<string, List<string>> ValidationErrors => _errors;
-        
-        public bool HasErrors => _errors.Count > 0;
-
-        /// <summary>
-        /// Used to patch the properties in the target object when the name in the Dto matches and all the validation can be done via attributes.
-        /// </summary>
-        /// <param name="target"></param>
-        /// <param name="propertiesToPatch">properties to auto patch</param>
-        public void AutoPatch(object target, params Expression<Func<TSource, object>>[] propertiesToPatch)
-        {
-            foreach (var propertySelector in propertiesToPatch)
-            {
-                var propertyName = Reflection.GetPropertyName(propertySelector);
-
-                if (KeyIsPresentInJson(propertyName) && JsonValueIsValid(propertyName))
-                {
-                    PatchValue(target, propertyName);
-                }
-            }
-        }
 
         private bool JsonValueIsValid(string propertyName)
         {
@@ -124,18 +124,22 @@ namespace Patch.Net
             return _json.GetValue(propertyName, StringComparison.InvariantCultureIgnoreCase) != null;
         }
 
-        public bool HasKey<T>(Expression<Func<TSource, object>> expression, out T value)
+        private static string GetPropertyName<TValue>(Expression<Func<TSource, TValue>> propertyLambda)
         {
-            var propertyName = Reflection.GetPropertyName(expression);
+            LambdaExpression lambda = propertyLambda;
+            MemberExpression memberExpression;
 
-            if (KeyIsPresentInJson(propertyName))
+            if (lambda.Body is UnaryExpression expression)
             {
-                value = (T) Reflection.GetValue(propertyName, from: _object);
-                return true;
+                var unaryExpression = expression;
+                memberExpression = (MemberExpression)(unaryExpression.Operand);
+            }
+            else
+            {
+                memberExpression = (MemberExpression)(lambda.Body);
             }
 
-            value = default;
-            return false;
+            return ((PropertyInfo)memberExpression.Member).Name;
         }
     }
 }

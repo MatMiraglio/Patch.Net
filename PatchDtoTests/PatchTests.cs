@@ -146,12 +146,12 @@ namespace Patch.NetTests
             var patch = new Patch<SourceClass>(json);
 
 
-            if (patch.HasKey(x => x.StringProperty, out string value))
+            if (patch.HasKey(x => x.StringProperty, out var value))
                 Assert.AreEqual("json_value", value);
             else
                 Assert.Fail();
 
-            if (patch.HasKey(x => x.IntProperty, out int intVal))
+            if (patch.HasKey(x => x.IntProperty, out var intVal))
                 Assert.AreEqual(15, intVal);
             else
                 Assert.Fail();
@@ -163,7 +163,7 @@ namespace Patch.NetTests
         {
             var patch = new Patch<SourceClass>("{}");
 
-            if (patch.HasKey(x => x.StringProperty, out string value))
+            if (patch.HasKey(x => x.StringProperty, out var value))
                 Assert.Fail();
         }
 
@@ -296,10 +296,10 @@ namespace Patch.NetTests
 
             var patch = new Patch<SourceClass>(json);
 
-            if (patch.HasKey(x => x.GuidList, out List<Guid> list))
+            if (patch.HasKey(x => x.GuidList, out var guidList))
             {
-                Assert.AreEqual(new Guid("00000000-0000-0000-0000-000000000022"), list[0]);
-                Assert.AreEqual(new Guid("00000000-0000-0000-0000-000000000033"), list[1]);
+                Assert.AreEqual(new Guid("00000000-0000-0000-0000-000000000022"), guidList[0]);
+                Assert.AreEqual(new Guid("00000000-0000-0000-0000-000000000033"), guidList[1]);
             }
             else Assert.Fail();
         }
