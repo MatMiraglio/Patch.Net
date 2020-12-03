@@ -4,7 +4,7 @@ using System.Reflection;
 
 namespace Patch.Net
 {
-    public static class Helper
+    public static class Reflection
     {
         public static string GetPropertyName<TSource>(Expression<Func<TSource, object>> propertyLambda)
         {

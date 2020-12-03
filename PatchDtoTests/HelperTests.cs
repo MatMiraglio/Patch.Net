@@ -10,7 +10,7 @@ namespace Patch.NetTests
         [Test]
         public void GetPropertyName_returns_the_name_of_the_property_selected_in_an_expression()
         {
-            var result = Helper.GetPropertyName<SampleClass>(x => x.StringProperty);
+            var result = Reflection.GetPropertyName<SampleClass>(x => x.StringProperty);
 
             Assert.AreEqual(result, "StringProperty");
         }

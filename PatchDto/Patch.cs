@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using Newtonsoft.Json;
@@ -15,7 +14,7 @@ namespace Patch.Net
     {
         public override Patch<T> ReadJson(JsonReader reader, Type objectType, [AllowNull] Patch<T> existingValue, bool hasExistingValue, JsonSerializer serializer)
         {
-            return new Patch<T>(reader.ToString());
+            throw new NotImplementedException();
         }
 
         public override void WriteJson(JsonWriter writer, [AllowNull] Patch<T> value, JsonSerializer serializer)
@@ -25,7 +24,7 @@ namespace Patch.Net
     }
 
 
-
+    [JsonConverter(typeof(PatchJsonConverter<>))]
     public class Patch<TSource>
     {
         private readonly JObject _json;
@@ -47,7 +46,7 @@ namespace Patch.Net
             {
                 var classPropertyName = GetClassPropertyName(key.Name);
 
-                var value = Helper.GetValue(classPropertyName, from: _object);
+                var value = Reflection.GetValue(classPropertyName, from: _object);
 
                 var validationResults = GetValidationErrors(classPropertyName, value);
 
@@ -99,7 +98,7 @@ namespace Patch.Net
         {
             foreach (var propertySelector in propertiesToPatch)
             {
-                var propertyName = Helper.GetPropertyName(propertySelector);
+                var propertyName = Reflection.GetPropertyName(propertySelector);
 
                 if (KeyIsPresentInJson(propertyName) && JsonValueIsValid(propertyName))
                 {
@@ -115,9 +114,9 @@ namespace Patch.Net
 
         private void PatchValue(object target, string propertyName)
         {
-            var value = Helper.GetValue(propertyName, @from: _object);
+            var value = Reflection.GetValue(propertyName, from: _object);
 
-            Helper.Assign(value, propertyName, to: target);
+            Reflection.Assign(value, propertyName, to: target);
         }
 
         private bool KeyIsPresentInJson(string propertyName)
@@ -127,11 +126,11 @@ namespace Patch.Net
 
         public bool HasPatchFor(Expression<Func<TSource, object>> expression, out object value)
         {
-            var propertyName = Helper.GetPropertyName(expression);
+            var propertyName = Reflection.GetPropertyName(expression);
 
             if (KeyIsPresentInJson(propertyName))
             {
-                value = Helper.GetValue(propertyName, from: _object);
+                value = Reflection.GetValue(propertyName, from: _object);
                 return true;
             }
 

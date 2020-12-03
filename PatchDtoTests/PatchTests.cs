@@ -50,11 +50,11 @@ namespace Patch.NetTests
         {
 
             const string json = @"
-                {
-                    'StringProperty' : 'json_value',
-                    'IntProperty' : 5,
-                    'DateTimeProperty' : '2020-01-12'
-                }";
+            {
+                'StringProperty' : 'json_value',
+                'IntProperty' : 5,
+                'DateTimeProperty' : '2020-01-12'
+            }";
 
             var patch = new Patch<SourceClass>(json);
 
@@ -80,10 +80,10 @@ namespace Patch.NetTests
         {
 
             const string json = @"
-                {
-                    'IntProperty' : 5,
-                    'DateTimeProperty' : '2020-01-12'
-                }";
+            {
+                'IntProperty' : 5,
+                'DateTimeProperty' : '2020-01-12'
+            }";
 
             var patch = new Patch<SourceClass>(json);
 
@@ -110,10 +110,10 @@ namespace Patch.NetTests
         {
 
             const string json = @"
-                {
-                    'IntProperty' : 15,
-                    'StringProperty' : 'json_value'
-                }";
+            {
+                'IntProperty' : 15,
+                'StringProperty' : 'json_value'
+            }";
 
             var patch = new Patch<SourceClass>(json);
 
@@ -137,10 +137,10 @@ namespace Patch.NetTests
         {
 
             const string json = @"
-                {
-                    'intProperty' : 15,
-                    'stringProperty' : 'json_value'
-                }";
+            {
+                'intProperty' : 15,
+                'stringProperty' : 'json_value'
+            }";
 
             var patch = new Patch<SourceClass>(json);
 
@@ -231,9 +231,9 @@ namespace Patch.NetTests
         {
 
             const string json = @"
-                {
-                    'maxLength5' : '123456'
-                }";
+            {
+                'maxLength5' : '123456'
+            }";
 
             var patch = new Patch<SourceClass>(json);
 
