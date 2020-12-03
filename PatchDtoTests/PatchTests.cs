@@ -9,15 +9,10 @@ namespace Patch.NetTests
     [TestFixture]
     public class PatchTests
     {
-        [SetUp]
-        public void Setup()
-        {
-        }
-
         [Test]
         public void A_property_is_auto_patched_if_it_is_present_in_the_json_and_is_selected_with_an_expression()
         {
-           
+
             const string json = @"
             {
                 'StringProperty' : 'json_value',
@@ -34,15 +29,15 @@ namespace Patch.NetTests
                 DateTimeProperty = DateTime.UtcNow
             };
 
-            patch.AutoPatch(targetObject, 
+            patch.AutoPatch(targetObject,
                 x => x.StringProperty,
                 x => x.IntProperty,
                 x => x.DateTimeProperty
                 );
 
-            Assert.AreEqual(targetObject.StringProperty, "json_value");
-            Assert.AreEqual(targetObject.IntProperty, 5);
-            Assert.AreEqual(targetObject.DateTimeProperty, new DateTime(2020, 1, 12));
+            Assert.AreEqual("json_value", targetObject.StringProperty);
+            Assert.AreEqual(5, targetObject.IntProperty);
+            Assert.AreEqual(new DateTime(2020, 1, 12), targetObject.DateTimeProperty);
         }
 
 
@@ -71,9 +66,9 @@ namespace Patch.NetTests
                 x => x.DateTimeProperty
             );
 
-            Assert.AreEqual(targetObject.StringProperty, "original_value");
-            Assert.AreEqual(targetObject.IntProperty, 5);
-            Assert.AreEqual(targetObject.DateTimeProperty, new DateTime(2020, 1, 12));
+            Assert.AreEqual("original_value", targetObject.StringProperty);
+            Assert.AreEqual(5, targetObject.IntProperty);
+            Assert.AreEqual(new DateTime(2020, 1, 12), targetObject.DateTimeProperty);
         }
 
         [Test]
@@ -101,9 +96,9 @@ namespace Patch.NetTests
                 x => x.DateTimeProperty
             );
 
-            Assert.AreEqual(targetObject.StringProperty, "original_value");
-            Assert.AreEqual(targetObject.IntProperty, 5);
-            Assert.AreEqual(targetObject.DateTimeProperty, new DateTime(2020, 1, 12));
+            Assert.AreEqual("original_value", targetObject.StringProperty);
+            Assert.AreEqual(5, targetObject.IntProperty);
+            Assert.AreEqual(new DateTime(2020, 1, 12), targetObject.DateTimeProperty);
         }
 
         [Test]
@@ -129,8 +124,8 @@ namespace Patch.NetTests
                 x => x.IntProperty
             );
 
-            Assert.AreEqual(targetObject.StringProperty, "json_value");
-            Assert.AreEqual(targetObject.IntProperty, 1);
+            Assert.AreEqual("json_value", targetObject.StringProperty);
+            Assert.AreEqual(1, targetObject.IntProperty);
         }
 
         [Test]
@@ -167,8 +162,6 @@ namespace Patch.NetTests
                 Assert.Fail();
         }
 
-
-
         [Test]
         public void Patch_is_case_insensitive()
         {
@@ -192,8 +185,8 @@ namespace Patch.NetTests
                 x => x.IntProperty
             );
 
-            Assert.AreEqual(targetObject.StringProperty, "json_value");
-            Assert.AreEqual(targetObject.IntProperty, 10);
+            Assert.AreEqual("json_value", targetObject.StringProperty);
+            Assert.AreEqual(10, targetObject.IntProperty);
         }
 
         [Test]
@@ -303,8 +296,35 @@ namespace Patch.NetTests
             }
             else Assert.Fail();
         }
-    }
 
+        [Test]
+        public void Patching_nested_properties_is_valid()
+        {
+
+            const string json = @"
+            {
+                'Nested' : {
+                    'NestedProperty' : 'nested_value'
+                }
+            }";
+
+            var patch = new Patch<SourceClass>(json);
+
+            var targetObject = new TargetClass
+            {
+                Nested = new Nested
+                {
+                    NestedProperty = "original_nested"
+                }
+            };
+
+            patch.AutoPatch(targetObject,
+                x => x.Nested.NestedProperty
+            );
+
+            Assert.AreEqual("nested_value", targetObject.Nested.NestedProperty);
+        }
+    }
 
     public class SourceClass
     {
@@ -320,6 +340,13 @@ namespace Patch.NetTests
         public DateTime DateTimeProperty { get; set; }
 
         public List<Guid> GuidList { get; set; }
+
+        public Nested Nested { get; set; }
+    }
+
+    public class Nested
+    {
+        public string NestedProperty { get; set; }
     }
 
     public class TargetClass
@@ -329,5 +356,6 @@ namespace Patch.NetTests
         public DateTime DateTimeProperty { get; set; }
         public string MaxLength5 { get; set; }
         public List<Guid> GuidProperty { get; set; }
+        public Nested Nested { get; set; }
     }
 }
