@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.Diagnostics.CodeAnalysis;
 using NUnit.Framework;
 using Patch.Net;
 
@@ -107,24 +108,20 @@ namespace Patch.NetTests
 
             const string json = @"
             {
-                'IntProperty' : 15,
-                'StringProperty' : 'json_value'
+                'IntProperty' : 15
             }";
 
             var patch = new Patch<SourceClass>(json);
 
             var targetObject = new TargetClass
             {
-                StringProperty = "original_value",
                 IntProperty = 1
             };
 
             patch.AutoPatch(targetObject,
-                x => x.StringProperty,
                 x => x.IntProperty
             );
 
-            Assert.AreEqual("json_value", targetObject.StringProperty);
             Assert.AreEqual(1, targetObject.IntProperty);
         }
 
@@ -150,7 +147,6 @@ namespace Patch.NetTests
                 Assert.AreEqual(15, intVal);
             else
                 Assert.Fail();
-
         }
 
         [Test]
@@ -163,6 +159,7 @@ namespace Patch.NetTests
         }
 
         [Test]
+        [SuppressMessage("ReSharper", "StringLiteralTypo")]
         public void Patch_is_case_insensitive()
         {
 
@@ -190,7 +187,7 @@ namespace Patch.NetTests
         }
 
         [Test]
-        public void Validation_failures_are_added_to_the()
+        public void Validation_failures_are_added_to_the_ValidationErrors_dictionary()
         {
             const string json = @"
             {
@@ -198,16 +195,7 @@ namespace Patch.NetTests
             }";
 
             var patch = new Patch<SourceClass>(json);
-
-            var targetObject = new TargetClass
-            {
-                MaxLength5 = "original",
-            };
-
-            patch.AutoPatch(targetObject,
-                x => x.MaxLength5
-            );
-
+            
             var errors = patch.ValidationErrors;
 
             var propertyErrors = errors["MaxLength5"];
@@ -223,23 +211,13 @@ namespace Patch.NetTests
         [Test]
         public void Errors_are_returned_with_same_casing_as_in_the_original_json()
         {
-
             const string json = @"
             {
                 'maxLength5' : '123456'
             }";
 
             var patch = new Patch<SourceClass>(json);
-
-            var targetObject = new TargetClass
-            {
-                MaxLength5 = "original",
-            };
-
-            patch.AutoPatch(targetObject,
-                x => x.MaxLength5
-            );
-
+            
             var errors = patch.ValidationErrors;
 
             var propertyErrors = errors["maxLength5"];

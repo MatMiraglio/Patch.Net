@@ -24,9 +24,7 @@ namespace Patch.Net
         {
             _json = JObject.Parse(json);
             _object = JsonConvert.DeserializeObject<TSource>(json);
-            _errors = new Dictionary<string, List<string>>();
-
-            ValidatePatch();
+            _errors = ValidatePatch();
         }
 
         /// <summary>
@@ -61,8 +59,10 @@ namespace Patch.Net
             return false;
         }
 
-        private void ValidatePatch()
+        private Dictionary<string, List<string>> ValidatePatch()
         {
+            var errors = new Dictionary<string, List<string>>();
+
             foreach (var key in _json.Properties())
             {
                 var classPropertyName = GetClassPropertyName(key.Name);
@@ -71,8 +71,10 @@ namespace Patch.Net
 
                 var validationResults = GetValidationErrors(classPropertyName, value);
 
-                AddErrors(key.Name, validationResults);
+                AddErrors(key.Name, validationResults, errors);
             }
+
+            return errors;
         }
 
         private List<ValidationResult> GetValidationErrors(string classPropertyName, object value)
@@ -84,17 +86,17 @@ namespace Patch.Net
             return validationResults;
         }
 
-        private void AddErrors(string jsonKey, List<ValidationResult> validationResults)
+        private static void AddErrors(string jsonKey, List<ValidationResult> validationResults, Dictionary<string, List<string>> errors)
         {
             foreach (var validationResult in validationResults)
             {
-                if (_errors.TryGetValue(jsonKey, out var propertyErrors))
+                if (errors.TryGetValue(jsonKey, out var propertyErrors))
                 {
                     propertyErrors.Add(validationResult.ErrorMessage);
                 }
                 else
                 {
-                    _errors.Add(jsonKey, new List<string> { validationResult.ErrorMessage });
+                    errors.Add(jsonKey, new List<string> { validationResult.ErrorMessage });
                 }
             }
         }
