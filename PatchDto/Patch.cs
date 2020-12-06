@@ -51,7 +51,7 @@ namespace Patch.Net
 
             if (KeyIsPresentInJson(propertyName))
             {
-                value = (T)Reflection.GetValue(propertyName, from: _object);
+                value = (T) Reflection.GetValue(propertyName, from: _object);
                 return true;
             }
 

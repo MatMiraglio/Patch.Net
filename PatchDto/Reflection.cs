@@ -6,7 +6,6 @@ namespace Patch.Net
 {
     public static class Reflection
     {
-
         public static object GetValue<T>(string propertyName, T from)
         {
             return typeof(T)
